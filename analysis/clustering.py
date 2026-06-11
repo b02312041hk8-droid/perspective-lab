@@ -1,5 +1,9 @@
 import os
 
+import json
+import shutil
+from datetime import datetime
+
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.cluster import KMeans
@@ -12,6 +16,20 @@ from feature_extract import extract_features
 ROOT_DIR = "/content/drive/MyDrive/建築パース解析"
 ANALYSIS_DIR = os.path.join(ROOT_DIR, "analysis")
 
+LATEST_DIR = os.path.join(ANALYSIS_DIR, "latest")
+RUNS_DIR = os.path.join(ANALYSIS_DIR, "runs")
+
+def create_run_dirs():
+    now = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_id = f"run_{now}"
+
+    os.makedirs(LATEST_DIR, exist_ok=True)
+    os.makedirs(RUNS_DIR, exist_ok=True)
+
+    run_dir = os.path.join(RUNS_DIR, run_id)
+    os.makedirs(run_dir, exist_ok=True)
+
+    return run_id, run_dir
 
 def find_latest_queue_csv():
     csv_files = [
@@ -138,18 +156,22 @@ def run_clustering(color_df):
     return color_df
 
 
-def save_result_csv(color_df):
-    output_path = os.path.join(ANALYSIS_DIR, "color_analysis_result.csv")
+def save_result_csv(color_df, run_dir):
+    latest_path = os.path.join(LATEST_DIR, "color_analysis_result.csv")
+    run_path = os.path.join(run_dir, "result.csv")
 
     save_df = color_df.drop(columns=["imagePath"], errors="ignore")
-    save_df.to_csv(output_path, index=False, encoding="utf-8-sig")
+
+    save_df.to_csv(latest_path, index=False, encoding="utf-8-sig")
+    save_df.to_csv(run_path, index=False, encoding="utf-8-sig")
 
     print("結果CSVを保存しました:")
-    print(output_path)
+    print(latest_path)
+    print(run_path)
 
-
-def save_cluster_plot(color_df):
-    output_path = os.path.join(ANALYSIS_DIR, "color_cluster_plot.png")
+def save_cluster_plot(color_df, run_dir):
+    latest_path = os.path.join(LATEST_DIR, "color_cluster_plot.png")
+    run_path = os.path.join(run_dir, "cluster_plot.png")
 
     plt.figure(figsize=(8, 6))
 
@@ -177,25 +199,68 @@ def save_cluster_plot(color_df):
     plt.grid(True, alpha=0.35)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(output_path, dpi=200)
+
+    plt.savefig(latest_path, dpi=200)
+    plt.savefig(run_path, dpi=200)
     plt.show()
 
     print("クラスタ図を保存しました:")
-    print(output_path)
+    print(latest_path)
+    print(run_path)
 
+def save_summary(color_df, run_id, run_dir):
+    summary = {
+        "run_id": run_id,
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "image_count": int(len(color_df)),
+        "cluster_count": int(color_df["cluster"].nunique()),
+        "features": [
+            "mean_r",
+            "mean_g",
+            "mean_b",
+            "mean_hue",
+            "mean_brightness",
+            "mean_saturation",
+            "white_ratio",
+            "black_ratio",
+            "color_count",
+            "contrast",
+            "edge_ratio",
+            "aspect_ratio",
+            "green_ratio",
+            "sky_like_ratio",
+            "warm_ratio",
+            "cool_ratio"
+        ]
+    }
+
+    latest_path = os.path.join(LATEST_DIR, "analysis_summary.json")
+    run_path = os.path.join(run_dir, "summary.json")
+
+    with open(latest_path, "w", encoding="utf-8") as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)
+
+    with open(run_path, "w", encoding="utf-8") as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)
+
+    print("summary.json を保存しました:")
+    print(latest_path)
+    print(run_path)
 
 def main():
     print("Perspective Lab Analysis Start")
+
+    run_id, run_dir = create_run_dirs()
 
     df = load_queue()
     color_df = build_feature_table(df)
     color_df = run_clustering(color_df)
 
-    save_result_csv(color_df)
-    save_cluster_plot(color_df)
+    save_result_csv(color_df, run_dir)
+    save_cluster_plot(color_df, run_dir)
+    save_summary(color_df, run_id, run_dir)
 
     print("Perspective Lab Analysis Complete")
-
 
 if __name__ == "__main__":
     main()
