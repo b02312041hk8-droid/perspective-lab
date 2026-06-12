@@ -251,7 +251,7 @@ def save_summary(color_df, run_id, run_dir):
         'pc1_explained_ratio': round(float(pca.explained_variance_ratio_[0]), 4),
         'pc2_explained_ratio': round(float(pca.explained_variance_ratio_[1]), 4),
         'pc1_top_features': pc1_top_features,
-        'pc2_top_features': pc2_top_features
+        'pc2_top_features': pc2_top_features,
         "features": [
             "mean_r",
             "mean_g",
