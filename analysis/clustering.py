@@ -187,7 +187,7 @@ print("クラスタ数:", n_clusters)
 print("PC1寄与率:", round(pca.explained_variance_ratio_[0], 4))
 print("PC2寄与率:", round(pca.explained_variance_ratio_[1], 4))
 
-    return color_df
+return color_df
 
 
 def save_result_csv(color_df, run_dir):
