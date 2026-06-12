@@ -149,6 +149,40 @@ def run_clustering(color_df):
     color_df["PC1"] = pca_result[:, 0]
     color_df["PC2"] = pca_result[:, 1]
 
+# =========================
+# PCA 主成分の意味分析
+# =========================
+
+pca_components = pd.DataFrame(
+    pca.components_,
+    columns=feature_cols,
+    index=['PC1', 'PC2']
+)
+
+def get_top_pca_features(pc_name, top_n=5):
+    series = pca_components.loc[pc_name]
+
+    result = (
+        series
+        .abs()
+        .sort_values(ascending=False)
+        .head(top_n)
+        .index
+        .tolist()
+    )
+
+    return [
+        {
+            'feature': feature,
+            'weight': round(float(series[feature]), 4),
+            'direction': 'positive' if series[feature] >= 0 else 'negative'
+        }
+        for feature in result
+    ]
+
+pc1_top_features = get_top_pca_features('PC1')
+pc2_top_features = get_top_pca_features('PC2')
+
     print("クラスタ数:", n_clusters)
     print("PC1寄与率:", round(pca.explained_variance_ratio_[0], 4))
     print("PC2寄与率:", round(pca.explained_variance_ratio_[1], 4))
@@ -214,6 +248,10 @@ def save_summary(color_df, run_id, run_dir):
         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "image_count": int(len(color_df)),
         "cluster_count": int(color_df["cluster"].nunique()),
+        'pc1_explained_ratio': round(float(pca.explained_variance_ratio_[0]), 4),
+        'pc2_explained_ratio': round(float(pca.explained_variance_ratio_[1]), 4),
+        'pc1_top_features': pc1_top_features,
+        'pc2_top_features': pc2_top_features
         "features": [
             "mean_r",
             "mean_g",
