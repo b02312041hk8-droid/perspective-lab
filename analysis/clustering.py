@@ -149,46 +149,45 @@ def run_clustering(color_df):
     color_df["PC1"] = pca_result[:, 0]
     color_df["PC2"] = pca_result[:, 1]
 
-# =========================
-# PCA 主成分の意味分析
-# =========================
+    # =========================
+    # PCA 主成分の意味分析
+    # =========================
 
-pca_components = pd.DataFrame(
-    pca.components_,
-    columns=feature_cols,
-    index=['PC1', 'PC2']
-)
-
-def get_top_pca_features(pc_name, top_n=5):
-    series = pca_components.loc[pc_name]
-
-    result = (
-        series
-        .abs()
-        .sort_values(ascending=False)
-        .head(top_n)
-        .index
-        .tolist()
+    pca_components = pd.DataFrame(
+        pca.components_,
+        columns=feature_cols,
+        index=["PC1", "PC2"]
     )
 
-    return [
-        {
-            'feature': feature,
-            'weight': round(float(series[feature]), 4),
-            'direction': 'positive' if series[feature] >= 0 else 'negative'
-        }
-        for feature in result
-    ]
+    def get_top_pca_features(pc_name, top_n=5):
+        series = pca_components.loc[pc_name]
 
-pc1_top_features = get_top_pca_features('PC1')
-pc2_top_features = get_top_pca_features('PC2')
+        top_features = (
+            series
+            .abs()
+            .sort_values(ascending=False)
+            .head(top_n)
+            .index
+            .tolist()
+        )
 
-print("クラスタ数:", n_clusters)
-print("PC1寄与率:", round(pca.explained_variance_ratio_[0], 4))
-print("PC2寄与率:", round(pca.explained_variance_ratio_[1], 4))
+        return [
+            {
+                "feature": feature,
+                "weight": round(float(series[feature]), 4),
+                "direction": "positive" if series[feature] >= 0 else "negative"
+            }
+            for feature in top_features
+        ]
 
-return color_df
+    pc1_top_features = get_top_pca_features("PC1")
+    pc2_top_features = get_top_pca_features("PC2")
 
+    print("クラスタ数:", n_clusters)
+    print("PC1寄与率:", round(pca.explained_variance_ratio_[0], 4))
+    print("PC2寄与率:", round(pca.explained_variance_ratio_[1], 4))
+
+    return color_df
 
 def save_result_csv(color_df, run_dir):
     latest_path = os.path.join(LATEST_DIR, "color_analysis_result.csv")
