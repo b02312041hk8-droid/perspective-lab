@@ -183,9 +183,9 @@ def get_top_pca_features(pc_name, top_n=5):
 pc1_top_features = get_top_pca_features('PC1')
 pc2_top_features = get_top_pca_features('PC2')
 
-    print("クラスタ数:", n_clusters)
-    print("PC1寄与率:", round(pca.explained_variance_ratio_[0], 4))
-    print("PC2寄与率:", round(pca.explained_variance_ratio_[1], 4))
+print("クラスタ数:", n_clusters)
+print("PC1寄与率:", round(pca.explained_variance_ratio_[0], 4))
+print("PC2寄与率:", round(pca.explained_variance_ratio_[1], 4))
 
     return color_df
 
